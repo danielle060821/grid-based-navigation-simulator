@@ -48,8 +48,8 @@ astar_start = tuple(level_data["astar_start"])
 astar_agent = AStarAgent(astar_start)
 
 #open dataset by trajectory recorder
-path = "dataset.jsonl"
-recorder = TrajectoryRecorder(path)
+#path = "dataset.jsonl"
+#recorder = TrajectoryRecorder(path)
 
 sr, sc = start
 gr, gc = goal
@@ -121,7 +121,7 @@ def player_action(player_pos, player_last_move, restart):
             action = Move.RIGHT
     else:
         #stay(did not press any key)
-        recorder.record(obs(player_pos, goal, grid), action)    
+        #recorder.record(obs(player_pos, goal, grid), action)    
         return player_pos, player_last_move, restart  
      
     #if not wall, can go through
@@ -134,7 +134,7 @@ def player_action(player_pos, player_last_move, restart):
     else: 
         action = Move.STAY   
   
-    recorder.record(obs(player_pos, goal, grid), action)    
+    #recorder.record(obs(player_pos, goal, grid), action)    
     return player_pos, player_last_move,restart
 
 """
