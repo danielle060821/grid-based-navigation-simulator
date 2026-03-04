@@ -8,7 +8,7 @@ from game_state import Phase, GameState
 from agents import AStarAgent
 from asserts import check_asserts
 from rules import Rules, GameResult
-from trajectory_recoreder import TrajectoryRecorder
+from BC.trajectory_recoreder import TrajectoryRecorder
 
 #load level configuration
 def load_level(filename):
