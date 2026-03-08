@@ -46,8 +46,8 @@ class Renderer:
         self.screen.blit(over_text, rect)
     
     #display steps  
-    def display_steps(self, steps):
-        step_text = self.small_font.render(f"Alien Steps: {steps}", True, (47, 1, 108))
+    def display_steps(self, name, steps):
+        step_text = self.small_font.render(f"{name} Steps: {steps}", True, (47, 1, 108))
         self.screen.blit(step_text, (10, 10))  
         
     #draw background, or clear page(cover)
@@ -66,7 +66,11 @@ class Renderer:
         #astar agent(alien)
         self.alien_img = pygame.image.load("assets/images/Alien(AStar_Agent).png").convert_alpha()
         self.alien_img = pygame.transform.scale(self.alien_img, (self.CELL, self.CELL))
-      
+        
+        #bc agent(duck)
+        self.duck_img = pygame.image.load("assets/images/Duck(BC_Agent).png")
+        self.duck_img = pygame.transform.scale(self.duck_img, (self.CELL, self.CELL))
+        
     #draw goal and grid(draw goal after girid, or will be covered)
     def draw_static_world(self, grid, goal_row, goal_col) -> None:
         #draw grid
@@ -95,3 +99,9 @@ class Renderer:
         astar_x, astar_y = self.center_of_cell(astar_row, astar_col)
         rect = self.alien_img.get_rect(center = (astar_x, astar_y))
         self.screen.blit(self.alien_img, rect)
+        
+    def draw_bc_agent(self, bc_row, bc_col) -> None:
+        bc_x, bc_y = self.center_of_cell(bc_row, bc_col)
+        rect = self.duck_img.get_rect(center = (bc_x, bc_y))
+        self.screen.blit(self.duck_img, rect)
+        

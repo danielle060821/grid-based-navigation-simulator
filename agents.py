@@ -1,11 +1,16 @@
 from a_Star import AStar
+from BC.policy import Policy
+import torch
 
+#matches main loop
+STAY = 4
 """
     Astar agent
 """
 class AStarAgent:
     def __init__(self, start_pos):
-        self.pos = tuple(start_pos)
+        self.start_pos = tuple(start_pos)
+        self.pos = self.start_pos
         self.steps = 0
         self.ASTAR_COOLDOWN_MS = 330
         self.last_move = 0
@@ -32,5 +37,38 @@ class AStarAgent:
     
     def reset(self):
         self.pos = self.start_pos
-        self.step = 0
+        self.steps = 0
         self.last_move = 0
+
+"""
+    BC agent
+"""
+class BCAgent:
+    def __init__(self):
+        self.BC_COOLDOWN_MS = 300
+        self.steps = 0
+        self.last_move = -self.BC_COOLDOWN_MS
+        self.model = Policy()
+        self.model.load_state_dict(torch.load("BC/model.pth", map_location="cpu"))
+        #change to evalution mode(not training)
+        self.model.eval()
+    
+    #get direction(not position)
+    def action(self, state, now):
+        state = torch.tensor(state).float().unsqueeze(0)
+        
+        if now - self.last_move < self.BC_COOLDOWN_MS:
+            return STAY
+        else:
+            self.last_move = now
+            with torch.no_grad():
+                logits = self.model(state)
+                dir = torch.argmax(logits, dim=1).item()
+                #print("state:", state)
+                #print("logits:", logits)
+                #record steps
+                if dir != STAY:
+                    self.steps += 1
+            return dir
+        
+        

@@ -1,11 +1,10 @@
 import pygame
 import json
 import numpy as np
-from enum import IntEnum
 from renderer import Renderer
 from audio import play_music
 from game_state import Phase, GameState
-from agents import AStarAgent
+from agents import AStarAgent, BCAgent
 from asserts import check_asserts
 from rules import Rules, GameResult
 from BC.trajectory_recoreder import TrajectoryRecorder
@@ -17,6 +16,8 @@ def load_level(filename):
     return level
 
 level_data = load_level("Maps/level1.json")
+#pass level data to game state
+game_state = GameState(level_data)
 
 """
     Initialize
@@ -36,16 +37,19 @@ renderer.set_caption(level_name)
 #background music
 play_music(level_data["music"])   
 
-#player    
-start = tuple(level_data["player_start"])
-player_pos = start
-
 #goal
 goal = tuple(level_data["goal"])
-
-#astar agent
+#player
+start = tuple(level_data["player_start"])
+player_pos = start
+#astar
 astar_start = tuple(level_data["astar_start"])
 astar_agent = AStarAgent(astar_start)
+astar_pos = astar_start
+#bc
+bc_start = tuple(level_data["bc_start"])
+bc_pos = bc_start
+bc_agent = BCAgent()
 
 #open dataset by trajectory recorder
 #path = "dataset.jsonl"
@@ -54,6 +58,7 @@ astar_agent = AStarAgent(astar_start)
 sr, sc = start
 gr, gc = goal
 asr,asc = astar_start
+bcsr, bcsc = bc_start
 
 #check rules
 rules = Rules(goal)
@@ -63,79 +68,22 @@ GO_MS = 1000
 over_text = None
 over_color = None
 
-PLAYER_COOLDOWN_MS = 300
-restart = False
-#make sure the player can move when the frame first starts
-player_last_move = -PLAYER_COOLDOWN_MS
-class Move(IntEnum):
-    UP = 0
-    DOWN = 1
-    LEFT = 2
-    RIGHT = 3 
-    STAY = 4  
-
 #avoid potential bugs
 check_asserts(ROWS, COLS, grid, start, goal, astar_start)
 
-""" 
-    Player is manual
-""" 
-#reset game
-def reset_game(player_start, astar_start):
-    global player_last_move, restart
-    player_pos = player_start
-    astar_agent.pos = astar_start
-    player_last_move = -PLAYER_COOLDOWN_MS
-    restart = False
-    state.set_phase(Phase.COUNTDOWN)
-    #remember to reset game result too!
-    rules.result = GameResult.NONE
-    
-    return player_pos
-    
-def player_action(player_pos, player_last_move, restart):
-    
-    action = Move.STAY
-    #player can only move 1 step per PLAYER_COOLDOWN_MS // 1000 s
-    now = pygame.time.get_ticks()  
-    if now - player_last_move < PLAYER_COOLDOWN_MS:
-           return player_pos, player_last_move,restart
-         
-    #Player controlling keys(record player trajectory)
-    #press "R" to restart the game
-    keys = pygame.key.get_pressed()
-    action = Move.STAY
-    pr, pc = player_pos
-    new_pr, new_pc = pr, pc
-    if keys[pygame.K_w]:
-            new_pr -= 1
-            action = Move.UP
-    elif keys[pygame.K_s]:
-            new_pr += 1
-            action = Move.DOWN
-    elif keys[pygame.K_a]:
-            new_pc -= 1
-            action = Move.LEFT
-    elif keys[pygame.K_d]:
-            new_pc += 1
-            action = Move.RIGHT
+#bc pos
+def get_bc_pos(bc_pos, last_pos, now):
+    last_pos = bc_pos
+    state = game_state.get_bc_state(bc_pos)
+    dir = bc_agent.action(state, now)
+    pos = game_state.move(bc_pos, dir)
+    pr, pc = pos
+
+    if grid[pr][pc] == 1:
+        return last_pos
     else:
-        #stay(did not press any key)
-        #recorder.record(obs(player_pos, goal, grid), action)    
-        return player_pos, player_last_move, restart  
-     
-    #if not wall, can go through
-    if 0 <= new_pr < ROWS and 0 <= new_pc < COLS and grid[new_pr][new_pc] == 0:
-        #move
-        player_pos = (new_pr, new_pc)
-        player_last_move = now
-        
-    #at wall or grid boundary(can't move) 
-    else: 
-        action = Move.STAY   
-  
-    #recorder.record(obs(player_pos, goal, grid), action)    
-    return player_pos, player_last_move,restart
+        last_pos = pos
+        return pos
 
 """
 Trajectory recording
@@ -160,38 +108,39 @@ def obs(player_pos, goal, grid):
         left_walkable = False
     if pc + 1 >= COLS or grid[pr][pc + 1] == 1:
         right_walkable = False       
-    obs = np.array([dr, dc, up_walkable, down_walkable, left_walkable, right_walkable])
+    obs = np.array([dr, dc, int(up_walkable), int(down_walkable), int(left_walkable), int(right_walkable)])
     return obs   
-                  
+
 """
     Game loop
 """ 
-state = GameState()
-state.set_phase(Phase.COUNTDOWN)
-while state.running:
+game_state.set_phase(Phase.COUNTDOWN)
+while game_state.running:
     #60 frames/s
     clock.tick(60)
         
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            state.running = False
+            game_state.running = False
             #restart game
         if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-            restart = True
+            game_state.restart = True
                
     #cover the previous step
     renderer.draw_background() 
     
     #display steps    
-    renderer.display_steps(astar_agent.steps)
+    renderer.display_steps("AStar Alien", astar_agent.steps)
+    renderer.display_steps("BC Duck", bc_agent.steps)
     
     #buffer time(4s)before game starts 
-    if state.phase == Phase.COUNTDOWN:
+    if game_state.phase == Phase.COUNTDOWN:
         renderer.draw_static_world(grid, gr, gc)
         renderer.draw_player(sr, sc)
         renderer.draw_astar_agent(asr,asc)
+        renderer.draw_bc_agent(bcsr, bcsc)
         now = pygame.time.get_ticks()
-        elapsed = now - state.phase_start_time
+        elapsed = now - game_state.phase_start_time
         if elapsed < INITIAL_COUNTDOWN_MS:
             #count down: 3 -> 2 -> 1
             remaining = (INITIAL_COUNTDOWN_MS - elapsed + 999) // 1000
@@ -199,19 +148,19 @@ while state.running:
         elif elapsed - INITIAL_COUNTDOWN_MS < GO_MS:
             renderer.game_start_text()
         else:
-            state.set_phase(Phase.PLAYING) 
+            game_state.set_phase(Phase.PLAYING) 
             
     #restart game
-    elif restart == True:    
-        player_pos = reset_game(start, astar_start)
+    elif game_state.restart == True:    
+        player_pos = game_state.reset_game()
                 
     #game in process
-    elif state.phase == Phase.PLAYING:
+    elif game_state.phase == Phase.PLAYING:
 
         renderer.draw_static_world(grid, gr, gc)
             
         #draw player
-        player_pos, player_last_move, restart = player_action(player_pos, player_last_move, restart)
+        player_pos, player_last_move, restart, _ = game_state.player_action()
     
         pr, pc = player_pos
         renderer.draw_player(pr, pc)
@@ -221,33 +170,41 @@ while state.running:
         astar_pos, _, _ = astar_agent.update(grid, player_pos, now)
         ar, ac = astar_pos
         renderer.draw_astar_agent(ar, ac)
+        
+        #draw bc agent
+        bc_pos = get_bc_pos(bc_pos, bc_pos, now)
+        bcr, bcc = bc_pos
+        renderer.draw_bc_agent(bcr, bcc)
+        
         result = rules.evaluate(player_pos, astar_pos)
         
         #player lost(game loop does not care about why lose. lose is lose)
         if result == GameResult.LOSE:
-            state.set_phase(Phase.FINISHED)
+            game_state.set_phase(Phase.FINISHED)
             over_text = "You Lost!"
             over_color = (255, 0, 0)
             
         #player wins
         elif result == GameResult.WIN:
-            state.set_phase(Phase.FINISHED)
+            game_state.set_phase(Phase.FINISHED)
             over_text = "You Win!"
             over_color = (23, 199, 29)
     
     #delay 3 seconds after finish
-    elif state.phase == Phase.FINISHED:
+    elif game_state.phase == Phase.FINISHED:
         pr, pc = player_pos
-        ar,ac = astar_agent.pos
+        ar,ac = astar_pos
+        bcr, bcc = bc_pos
         renderer.draw_static_world(grid, gr, gc)
         #redraw player to prevent being covered by goal
         renderer.draw_player(pr, pc)
         renderer.draw_astar_agent(ar, ac)
+        renderer.draw_bc_agent(bcr, bcc)
         renderer.over_text(over_text, over_color)
         
-        elapsed = pygame.time.get_ticks() - state.phase_start_time
+        elapsed = pygame.time.get_ticks() - game_state.phase_start_time
         if elapsed > 3000:
-            state.running = False
+            game_state.running = False
         
     pygame.display.flip()
     

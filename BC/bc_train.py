@@ -12,7 +12,7 @@ store data as
 """
 X = []
 Y = []
-with open("dataset.jsonl","r") as f:
+with open("BC/dataset.jsonl","r") as f:
     for line in f:
         data = json.loads(line)
         
@@ -63,6 +63,9 @@ for epoch in range(500):
             new bias = old bias - gradientb * learning rate
     """
     optimizer.step()
+    
+    #save model trained
+    torch.save(model.state_dict(), "BC/model.pth")
     
     #print output every 50 epochs
     if epoch % 50 == 0:
