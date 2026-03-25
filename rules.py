@@ -1,4 +1,5 @@
 from game_state import GameResult
+
 """
     Game Rule
 """

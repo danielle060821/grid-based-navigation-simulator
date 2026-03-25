@@ -64,13 +64,13 @@ for epoch in range(500):
     """
     optimizer.step()
     
-    #save model trained
-    torch.save(model.state_dict(), "BC/model.pth")
-    
     #print output every 50 epochs
     if epoch % 50 == 0:
         #.item(): transform tensor to float
         print(f"epoch{epoch}, loss{loss.item():.4f}")
+        
+#save model trained
+torch.save(model.state_dict(), "BC/model.pth")
     
 #test accuracy
 with torch.no_grad():

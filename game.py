@@ -1,13 +1,14 @@
 import pygame
 import json
-import numpy as np
+#import random
 from renderer import Renderer
 from audio import play_music
 from game_state import Phase, GameState
-from agents import AStarAgent, BCAgent
+from agents import AStarAgent, BCAgent, Player
 from asserts import check_asserts
 from rules import Rules, GameResult
-from BC.trajectory_recoreder import TrajectoryRecorder
+#from BC.trajectory_recoreder import TrajectoryRecorder
+from BC.features import obs
 
 #load level configuration
 def load_level(filename):
@@ -39,26 +40,18 @@ play_music(level_data["music"])
 
 #goal
 goal = tuple(level_data["goal"])
+gr, gc = goal
 #player
-start = tuple(level_data["player_start"])
-player_pos = start
+player = Player(tuple(level_data["player_start"]))
 #astar
-astar_start = tuple(level_data["astar_start"])
-astar_agent = AStarAgent(astar_start)
-astar_pos = astar_start
+astar_agent = AStarAgent(tuple(level_data["astar_start"]))
 #bc
-bc_start = tuple(level_data["bc_start"])
-bc_pos = bc_start
-bc_agent = BCAgent()
+bc_agent = BCAgent(tuple(level_data["bc_start"]))
 
 #open dataset by trajectory recorder
-#path = "dataset.jsonl"
+path = "dataset.jsonl"
 #recorder = TrajectoryRecorder(path)
-
-sr, sc = start
-gr, gc = goal
-asr,asc = astar_start
-bcsr, bcsc = bc_start
+#recorder.reset(path)
 
 #check rules
 rules = Rules(goal)
@@ -69,47 +62,7 @@ over_text = None
 over_color = None
 
 #avoid potential bugs
-check_asserts(ROWS, COLS, grid, start, goal, astar_start)
-
-#bc pos
-def get_bc_pos(bc_pos, last_pos, now):
-    last_pos = bc_pos
-    state = game_state.get_bc_state(bc_pos)
-    dir = bc_agent.action(state, now)
-    pos = game_state.move(bc_pos, dir)
-    pr, pc = pos
-
-    if grid[pr][pc] == 1:
-        return last_pos
-    else:
-        last_pos = pos
-        return pos
-
-"""
-Trajectory recording
-"""
-#obs: need dx, dy and up_walkable, down...,left...,right...
-def obs(player_pos, goal, grid):
-    up_walkable = True
-    down_walkable = True
-    left_walkable = True
-    right_walkable = True
-    pr, pc = player_pos
-    gr, gc = goal
-    dr = gr - pr
-    dc = gc - pc
-    
-    #check if position is valid first, avoid out of bounds error
-    if pr + 1 >= ROWS or grid[pr + 1][pc] == 1:
-        up_walkable = False
-    if pr - 1 < 0 or grid[pr - 1][pc] == 1:
-        down_walkable = False
-    if pc - 1 < 0 or grid[pr][pc - 1] == 1:
-        left_walkable = False
-    if pc + 1 >= COLS or grid[pr][pc + 1] == 1:
-        right_walkable = False       
-    obs = np.array([dr, dc, int(up_walkable), int(down_walkable), int(left_walkable), int(right_walkable)])
-    return obs   
+check_asserts(ROWS, COLS, grid, player.start, goal, astar_agent.start)
 
 """
     Game loop
@@ -135,10 +88,13 @@ while game_state.running:
     
     #buffer time(4s)before game starts 
     if game_state.phase == Phase.COUNTDOWN:
+        pr, pc = player.pos
+        ar, ac = astar_agent.pos
+        br, bc = bc_agent.pos
         renderer.draw_static_world(grid, gr, gc)
-        renderer.draw_player(sr, sc)
-        renderer.draw_astar_agent(asr,asc)
-        renderer.draw_bc_agent(bcsr, bcsc)
+        renderer.draw_player(pr, pc)
+        renderer.draw_astar_agent(ar,ac)
+        renderer.draw_bc_agent(br, bc)
         now = pygame.time.get_ticks()
         elapsed = now - game_state.phase_start_time
         if elapsed < INITIAL_COUNTDOWN_MS:
@@ -151,33 +107,45 @@ while game_state.running:
             game_state.set_phase(Phase.PLAYING) 
             
     #restart game
-    elif game_state.restart == True:    
-        player_pos = game_state.reset_game()
-                
+    elif game_state.restart == True:  
+        game_state.reset_game()  
+        result = rules.reset()
+        player.reset()
+        astar_agent.reset()
+        bc_agent.reset()
+           
     #game in process
     elif game_state.phase == Phase.PLAYING:
 
         renderer.draw_static_world(grid, gr, gc)
             
         #draw player
-        player_pos, player_last_move, restart, _ = game_state.player_action()
-    
-        pr, pc = player_pos
+        player_action = player.action(grid, ROWS, COLS)
+        pr, pc = player.pos
         renderer.draw_player(pr, pc)
         now = pygame.time.get_ticks()   
         
         #draw astar agent(do not need to access internal data(ex. steps, last_move))
-        astar_pos, _, _ = astar_agent.update(grid, player_pos, now)
-        ar, ac = astar_pos
+        astar_agent.update(grid, player.pos, now)
+        ar, ac = astar_agent.pos
         renderer.draw_astar_agent(ar, ac)
         
         #draw bc agent
-        bc_pos = get_bc_pos(bc_pos, bc_pos, now)
-        bcr, bcc = bc_pos
-        renderer.draw_bc_agent(bcr, bcc)
+        observation = obs(bc_agent.pos, goal, grid, ROWS, COLS)
+        bc_action = bc_agent.action(observation, now)
+        bc_agent.move(bc_action, grid, ROWS, COLS)
+        br, bc = bc_agent.pos
+        renderer.draw_bc_agent(br, bc)
         
-        result = rules.evaluate(player_pos, astar_pos)
-        
+        #record data: only keep 1% of "STAY" data when recording, to prevent agent from only learning "STAY"
+        """if bc_action == Move.STAY:
+            if random.random() < 0.01:
+                recorder.record(observation, bc_action)    
+        else:
+            recorder.record(observation, bc_action)
+        """   
+        result = rules.evaluate(player.pos, astar_agent.pos)
+    
         #player lost(game loop does not care about why lose. lose is lose)
         if result == GameResult.LOSE:
             game_state.set_phase(Phase.FINISHED)
@@ -189,17 +157,17 @@ while game_state.running:
             game_state.set_phase(Phase.FINISHED)
             over_text = "You Win!"
             over_color = (23, 199, 29)
-    
+            
     #delay 3 seconds after finish
     elif game_state.phase == Phase.FINISHED:
-        pr, pc = player_pos
-        ar,ac = astar_pos
-        bcr, bcc = bc_pos
         renderer.draw_static_world(grid, gr, gc)
         #redraw player to prevent being covered by goal
+        pr, pc = player.pos
+        ar, ac = astar_agent.pos
+        br, bc = bc_agent.pos
         renderer.draw_player(pr, pc)
         renderer.draw_astar_agent(ar, ac)
-        renderer.draw_bc_agent(bcr, bcc)
+        renderer.draw_bc_agent(br, bc)
         renderer.over_text(over_text, over_color)
         
         elapsed = pygame.time.get_ticks() - game_state.phase_start_time
