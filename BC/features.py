@@ -11,8 +11,9 @@ def obs(bc_pos, goal, grid, ROWS, COLS):
     right_walkable = True
     br, bc = bc_pos
     gr, gc = goal
-    dr = gr - br
-    dc = gc - bc
+    #normalize dr and dc so their value would be in the same scale with the other vars
+    dr = (gr - br) / float(ROWS)
+    dc = (gc - bc) / float(COLS)
     
     #check if position is valid first, avoid out of bounds error
     if br + 1 >= ROWS or grid[br + 1][bc] == 1:

@@ -1,13 +1,11 @@
 import pygame
 import json
-#import random
 from renderer import Renderer
 from audio import play_music
 from game_state import Phase, GameState
 from agents import AStarAgent, BCAgent, Player
 from asserts import check_asserts
 from rules import Rules, GameResult
-#from BC.trajectory_recoreder import TrajectoryRecorder
 from BC.features import obs
 
 #load level configuration
@@ -40,6 +38,7 @@ play_music(level_data["music"])
 
 #goal
 goal = tuple(level_data["goal"])
+
 gr, gc = goal
 #player
 player = Player(tuple(level_data["player_start"]))
@@ -49,9 +48,7 @@ astar_agent = AStarAgent(tuple(level_data["astar_start"]))
 bc_agent = BCAgent(tuple(level_data["bc_start"]))
 
 #open dataset by trajectory recorder
-path = "dataset.jsonl"
-#recorder = TrajectoryRecorder(path)
-#recorder.reset(path)
+#path = "dataset_expert.jsonl"
 
 #check rules
 rules = Rules(goal)
@@ -136,16 +133,7 @@ while game_state.running:
         bc_agent.move(bc_action, grid, ROWS, COLS)
         br, bc = bc_agent.pos
         renderer.draw_bc_agent(br, bc)
-        
-        #record data: only keep 1% of "STAY" data when recording, to prevent agent from only learning "STAY"
-        """if bc_action == Move.STAY:
-            if random.random() < 0.01:
-                recorder.record(observation, bc_action)    
-        else:
-            recorder.record(observation, bc_action)
-        """   
         result = rules.evaluate(player.pos, astar_agent.pos)
-    
         #player lost(game loop does not care about why lose. lose is lose)
         if result == GameResult.LOSE:
             game_state.set_phase(Phase.FINISHED)

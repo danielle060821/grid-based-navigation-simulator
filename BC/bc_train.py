@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from policy import Policy
+from collections import Counter
 
 """
 store data as 
@@ -12,7 +13,9 @@ store data as
 """
 X = []
 Y = []
-with open("BC/dataset.jsonl","r") as f:
+data_set = "dataset_expert.jsonl"
+#change data
+with open(data_set,"r") as f:
     for line in f:
         data = json.loads(line)
         
@@ -20,6 +23,10 @@ with open("BC/dataset.jsonl","r") as f:
         action = data["action"]
         X.append(obs)
         Y.append(action)
+
+cnt = Counter(Y)
+print(cnt) 
+    
 #numpy: for organizting data into consistent structure, also makes debugging easier(can get size)
 #X needs to be used for calculation, so float is more accurate
 X = np.array(X, dtype = np.float32)
@@ -36,7 +43,7 @@ criterion = nn.CrossEntropyLoss()
 
 #train 500 times
 for epoch in range(500):
-    #initialize optimizer
+    #clear optimizer
     optimizer.zero_grad()
     
     #raw scores(tensor)

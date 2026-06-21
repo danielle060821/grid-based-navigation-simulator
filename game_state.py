@@ -1,5 +1,5 @@
 import pygame
-from enums import Phase, GameResult, Move
+from enums import Phase, GameResult
 
 #used auto instead of numbers to avoid unexpected confusion since there are multiple classes.
 #numbers are also useless in this case.
