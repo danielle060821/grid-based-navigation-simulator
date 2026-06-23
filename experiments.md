@@ -8,8 +8,8 @@ Success Rate: 60%
 Average Steps: 8.62
 
 Observation:
-- Frequently gets stuck near corners.
-- Sometimes predicts STAY repeatedly.
+- Frequently gets stuck near corners
+- Sometimes predicts STAY repeatedly
 
 ---
 
@@ -19,8 +19,12 @@ Success Rate: 63%
 Average Steps: 9.35
 
 Observation:
-- Slight improvement.
-- Stay replaced by oscillation
+- Slight improvement
+- STAY replaced by oscillation
+
+Conclusion:
+- STAY is not the dominant failure reason
+
 
 
 | Method | Success Rate | Timeout | Avg Steps |
