@@ -1,21 +1,21 @@
 import pygame
-import json
 from renderer import Renderer
 from audio import play_music
 from game_state import Phase, GameState
-from agents import AStarAgent, Player
-from asserts import check_asserts
-from rules import Rules, GameResult
+from agents import BCAgent
+from BC.features import obs
+from random_env_generator import generate_valid_mp
 
-#load level configuration
-def load_level(filename):
-    with open(filename) as f:
-        level = json.load(f)
-    return level
-
-def run_game_mode():
-    level_data = load_level("Maps/level1.json")
-    #pass level data to game state
+def run_bc_demo(ROWS, COLS):
+    grid, start, goal = generate_valid_mp(ROWS, COLS)
+    level_data = {
+        "level_name": "Random BC Demo",
+        "grid": grid,
+        "bc_start": list(start),
+        "map_size":[ROWS, COLS], 
+        "goal": list(goal),
+        "music": "assets/audio/Space_Game_Music.mp3"
+    }
     game_state = GameState(level_data)
     """
         Initialize
@@ -25,36 +25,23 @@ def run_game_mode():
     clock = pygame.time.Clock()
     grid = level_data["grid"]
     renderer = Renderer()
-    ROWS, COLS = level_data["ROWS"], level_data["COLS"]
-
-    #set caption for the current level 
-    #set "Space Game" as caption when level name is not found, avoid unexpected behaviour 
     level_name = level_data.get("level_name", "Space Game")
     renderer.set_caption(level_name) 
-
+    
     #background music
-    play_music(level_data["music"])   
-
+    play_music(level_data["music"])
     #goal
     goal = tuple(level_data["goal"])
-
     gr, gc = goal
-    #player
-    player = Player(tuple(level_data["player_start"]))
-    #astar
-    astar_agent = AStarAgent(tuple(level_data["astar_start"]))
-   
-    #check rules
-    rules = Rules(goal)
-
+    
+    #bc
+    bc_agent = BCAgent(tuple(level_data["bc_start"]))
     INITIAL_COUNTDOWN_MS = 3000
     GO_MS = 1000
     over_text = None
     over_color = None
-
-    #avoid potential bugs
-    check_asserts(ROWS, COLS, grid, player.start, goal, astar_agent.start)
-
+    max_steps = ROWS * COLS * 2
+    
     """
         Game loop
     """ 
@@ -74,17 +61,13 @@ def run_game_mode():
         renderer.draw_background() 
         
         #display steps    
-        renderer.display_steps("AStar Alien", astar_agent.steps)
+        renderer.display_steps("BC Duck", bc_agent.steps)
         
         #buffer time(4s)before game starts 
         if game_state.phase == Phase.COUNTDOWN:
-            pr, pc = player.pos
-            ar, ac = astar_agent.pos
-           
+            br, bc = bc_agent.pos
             renderer.draw_static_world(grid, gr, gc)
-            renderer.draw_player(pr, pc)
-            renderer.draw_astar_agent(ar,ac)
-           
+            renderer.draw_bc_agent(br, bc)
             now = pygame.time.get_ticks()
             elapsed = now - game_state.phase_start_time
             if elapsed < INITIAL_COUNTDOWN_MS:
@@ -97,11 +80,11 @@ def run_game_mode():
                 game_state.set_phase(Phase.PLAYING) 
                 
         #restart game
-        elif game_state.restart == True:  
+        elif game_state.restart == True:
             game_state.reset_game()  
-            result = rules.reset()
-            player.reset()
-            astar_agent.reset()
+            grid, start, goal = generate_valid_mp(ROWS, COLS)
+            gr, gc = goal
+            bc_agent = BCAgent(start)
             game_state.restart = False
             
         #game in process
@@ -109,38 +92,34 @@ def run_game_mode():
 
             renderer.draw_static_world(grid, gr, gc)
                 
-            #draw player
-            player.action(grid, ROWS, COLS)
-            pr, pc = player.pos
-            renderer.draw_player(pr, pc)
             now = pygame.time.get_ticks()   
             
-            #draw astar agent(do not need to access internal data(ex. steps, last_move))
-            astar_agent.update(grid, player.pos, now)
-            ar, ac = astar_agent.pos
-            renderer.draw_astar_agent(ar, ac)
+            #draw bc agent
+            observation = obs(bc_agent.pos, goal, grid, ROWS, COLS)
+            bc_action = bc_agent.action(observation, now)
+            bc_agent.move(bc_action, grid, ROWS, COLS)
+            bc_agent.steps += 1
+            # print("obs:", observation)
+            # print("action:", bc_action)
+            # print("pos:", bc_agent.pos)
             
-            result = rules.evaluate(player.pos, astar_agent.pos)
-            #player lost(game loop does not care about why lose. lose is lose)
-            if result == GameResult.LOSE:
+            br, bc = bc_agent.pos
+            renderer.draw_bc_agent(br, bc)
+            
+            #bc reaches goal
+            if bc_agent.pos == goal:
                 game_state.set_phase(Phase.FINISHED)
-                over_text = "You Lost!"
-                over_color = (255, 0, 0)
-                
-            #player wins
-            elif result == GameResult.WIN:
-                game_state.set_phase(Phase.FINISHED)
-                over_text = "You Win!"
+                over_text = "BC Win!"
                 over_color = (23, 199, 29)
-                
+            elif bc_agent.steps >= max_steps:
+                game_state.set_phase(Phase.FINISHED)
+                over_text = "Time Out!"
+                over_color = (255, 0, 0)
         #delay 3 seconds after finish
         elif game_state.phase == Phase.FINISHED:
             renderer.draw_static_world(grid, gr, gc)
-            #redraw player to prevent being covered by goal
-            pr, pc = player.pos
-            ar, ac = astar_agent.pos
-            renderer.draw_player(pr, pc)
-            renderer.draw_astar_agent(ar, ac)
+            br, bc = bc_agent.pos
+            renderer.draw_bc_agent(br, bc)
             renderer.over_text(over_text, over_color)
             
             elapsed = pygame.time.get_ticks() - game_state.phase_start_time
@@ -152,4 +131,8 @@ def run_game_mode():
     pygame.quit()
 
 if __name__ == "__main__":
-    run_game_mode()
+    run_bc_demo(15, 15)
+    
+    
+    
+    

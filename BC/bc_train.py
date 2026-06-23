@@ -49,7 +49,7 @@ for epoch in range(500):
     #raw scores(tensor)
     logits = model(X_tensor)
     #dont allow stay
-    #logits[4] = float('-inf')
+    logits[4] = float('-inf')
     """
     CrossEntropyLoss:
         (1)turn logits to probability
