@@ -1,0 +1,17 @@
+{
+    "date": "2026-06-23",
+    "version": "bc_no_stay",
+    "episodes": 100,
+
+    "astar": {
+        "success_rate": 1.0,
+        "avg_steps": 11.74
+    },
+
+    "bc": {
+        "success_rate": 0.63,
+        "avg_steps": 9.35
+    },
+
+    "notes": "No STAY action allowed."
+}

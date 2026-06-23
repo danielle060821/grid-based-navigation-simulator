@@ -1,0 +1,16 @@
+{
+    "date": "2026-06-23",
+    "version": "pure_bc",
+    "episodes": 100,
+    "astar": {
+        "success_rate": 1.0,
+        "avg_steps": 10.23
+    },
+
+    "bc": {
+        "success_rate": 0.6,
+        "avg_steps": 8.62
+    },
+
+    "notes": "Baseline"
+}
