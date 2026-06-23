@@ -13,7 +13,7 @@ store data as
 """
 X = []
 Y = []
-data_set = "dataset_expert.jsonl"
+data_set = "BC/dataset_expert.jsonl"
 #change data
 with open(data_set,"r") as f:
     for line in f:
@@ -48,7 +48,8 @@ for epoch in range(500):
     
     #raw scores(tensor)
     logits = model(X_tensor)
-    
+    #dont allow stay
+    logits[4] = float('-inf')
     """
     CrossEntropyLoss:
         (1)turn logits to probability

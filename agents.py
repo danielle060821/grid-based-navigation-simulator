@@ -121,8 +121,8 @@ class BCAgent:
             with torch.no_grad():
                 logits = self.model(state)
                 action = torch.argmax(logits, dim=1).item()
-                print("state:", state)
-                print("logits:", logits)
+                # print("state:", state)
+                # print("logits:", logits)
                 #record steps
                 if action != Move.STAY:
                     self.steps += 1
@@ -130,6 +130,7 @@ class BCAgent:
     
     def move(self, action, grid, ROWS, COLS):
             r, c = self.pos
+            old_pos = self.pos
             if action == Move.UP:
                 r -= 1
             elif action == Move.DOWN:
@@ -142,6 +143,8 @@ class BCAgent:
             if 0 <= r < ROWS and 0 <= c < COLS and grid[r][c] == 0:
                 #move
                 self.pos = (r, c)    
+                
+                
             #at wall or grid boundary(can't move) 
             else: 
                 return

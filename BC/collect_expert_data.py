@@ -2,7 +2,7 @@ import random
 from enums import Move
 from random_env_generator import generate_valid_mp
 from agents import AStarAgent
-from BC.trajectory_recoreder import TrajectoryRecorder
+from BC.trajectory_recorder import TrajectoryRecorder
 from BC.features import obs
 
 def expert_data(ROWS, COLS, save_path, episodes = 1000):

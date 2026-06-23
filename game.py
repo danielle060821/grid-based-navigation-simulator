@@ -131,6 +131,11 @@ while game_state.running:
         observation = obs(bc_agent.pos, goal, grid, ROWS, COLS)
         bc_action = bc_agent.action(observation, now)
         bc_agent.move(bc_action, grid, ROWS, COLS)
+        
+        # print("obs:", observation)
+        # print("action:", bc_action)
+        # print("pos:", bc_agent.pos)
+        
         br, bc = bc_agent.pos
         renderer.draw_bc_agent(br, bc)
         result = rules.evaluate(player.pos, astar_agent.pos)
