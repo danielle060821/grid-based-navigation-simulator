@@ -3,8 +3,9 @@
 A Python simulator with two modes: a real-time interactive game and an ML experiment pipeline comparing A* pathfinding against a learned agent.
 
 ## Demo
+▶️ [🎮Game mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
 
-▶️ [Watch Demo on YouTube](YOUR_LINK_HERE)
+▶️ [🧪Experiment mode(Watch Demo on YouTube)](https://youtube.com/shorts/GmepEk-TK6I?si=xkMxB1479WmvY4Mr)
 
 ---
 
