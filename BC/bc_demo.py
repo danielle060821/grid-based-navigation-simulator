@@ -1,3 +1,10 @@
+import sys
+import os
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+
 import pygame
 from renderer import Renderer
 from audio import play_music
@@ -23,7 +30,7 @@ def run_bc_demo(ROWS, COLS):
     pygame.init()
     clock = pygame.time.Clock()
     grid = level_data["grid"]
-    renderer = Renderer()
+    renderer = Renderer(15, 15)
     level_name = level_data.get("level_name", "Space Game")
     renderer.set_caption(level_name) 
     
@@ -66,7 +73,7 @@ def run_bc_demo(ROWS, COLS):
         #buffer time(4s)before game starts 
         if game_state.phase == Phase.COUNTDOWN:
             br, bc = bc_agent.pos
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
             renderer.draw_bc_agent(br, bc)
             now = pygame.time.get_ticks()
             elapsed = now - game_state.phase_start_time
@@ -91,7 +98,7 @@ def run_bc_demo(ROWS, COLS):
         #game in process
         elif game_state.phase == Phase.PLAYING:
 
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
                 
             now = pygame.time.get_ticks()   
             
@@ -116,7 +123,7 @@ def run_bc_demo(ROWS, COLS):
                 over_color = (255, 0, 0)
         #delay 3 seconds after finish
         elif game_state.phase == Phase.FINISHED:
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
             br, bc = bc_agent.pos
             renderer.draw_bc_agent(br, bc)
             renderer.over_text(over_text, over_color)

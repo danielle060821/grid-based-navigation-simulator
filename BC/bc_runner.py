@@ -1,4 +1,4 @@
-from hybrid_controller import HybridController
+from BC.hybrid_controller import HybridController
 from agents import BCAgent
 from BC.features import obs
 class BCRunner:

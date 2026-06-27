@@ -1,7 +1,6 @@
 from random_env_generator import generate_valid_mp
-from agents import AStarAgent, BCAgent
-from BC.features import obs
-from bc_runner import BCRunner
+from agents import AStarAgent
+from BC.bc_runner import BCRunner
 def generate_eval_mps(ROWS, COLS, num_episodes = 100):
     eval_mps = []
     for _ in range(num_episodes):

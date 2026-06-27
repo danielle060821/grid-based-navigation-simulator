@@ -24,8 +24,8 @@ def run_game_mode():
     pygame.init()
     clock = pygame.time.Clock()
     grid = level_data["grid"]
-    renderer = Renderer()
     ROWS, COLS = level_data["ROWS"], level_data["COLS"]
+    renderer = Renderer(ROWS, COLS)
 
     #set caption for the current level 
     #set "Space Game" as caption when level name is not found, avoid unexpected behaviour 
@@ -81,7 +81,7 @@ def run_game_mode():
             pr, pc = player.pos
             ar, ac = astar_agent.pos
            
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
             renderer.draw_player(pr, pc)
             renderer.draw_astar_agent(ar,ac)
            
@@ -107,7 +107,7 @@ def run_game_mode():
         #game in process
         elif game_state.phase == Phase.PLAYING:
 
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
                 
             #draw player
             player.action(grid, ROWS, COLS)
@@ -135,7 +135,7 @@ def run_game_mode():
                 
         #delay 3 seconds after finish
         elif game_state.phase == Phase.FINISHED:
-            renderer.draw_static_world(grid, gr, gc)
+            renderer.draw_static_world(grid, gr, gc, ROWS, COLS)
             #redraw player to prevent being covered by goal
             pr, pc = player.pos
             ar, ac = astar_agent.pos

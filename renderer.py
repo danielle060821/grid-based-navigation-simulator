@@ -2,10 +2,9 @@ import pygame
 
 class Renderer:
     
-    def __init__(self):
+    def __init__(self, ROWS, COLS):
         self.CELL = 40
-        self.ROWS, self.COLS = 15, 15
-        self.WIDTH, self.HEIGHT = self.ROWS * self.CELL, self.COLS * self.CELL
+        self.WIDTH, self.HEIGHT = ROWS * self.CELL, COLS * self.CELL
         #background
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         #fonts  
@@ -72,10 +71,10 @@ class Renderer:
         self.duck_img = pygame.transform.scale(self.duck_img, (self.CELL, self.CELL))
         
     #draw goal and grid(draw goal after girid, or will be covered)
-    def draw_static_world(self, grid, goal_row, goal_col) -> None:
+    def draw_static_world(self, grid, goal_row, goal_col, ROWS, COLS) -> None:
         #draw grid
-        for r in range(self.ROWS):
-            for c in range(self.COLS):
+        for r in range(ROWS):
+            for c in range(COLS):
                 color = (23, 16, 43) if grid[r][c] == 1 else (217, 211, 253)
                 pygame.draw.rect(
                     self.screen,
