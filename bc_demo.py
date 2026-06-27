@@ -2,9 +2,8 @@ import pygame
 from renderer import Renderer
 from audio import play_music
 from game_state import Phase, GameState
-from agents import BCAgent
-from BC.features import obs
 from random_env_generator import generate_valid_mp
+from bc_runner import BCRunner
 
 def run_bc_demo(ROWS, COLS):
     grid, start, goal = generate_valid_mp(ROWS, COLS)
@@ -35,13 +34,14 @@ def run_bc_demo(ROWS, COLS):
     gr, gc = goal
     
     #bc
-    bc_agent = BCAgent(tuple(level_data["bc_start"]))
+    bc_runner = BCRunner(start, grid, goal, ROWS, COLS)
+    bc_agent = bc_runner.bc_agent
     INITIAL_COUNTDOWN_MS = 3000
     GO_MS = 1000
     over_text = None
     over_color = None
     max_steps = ROWS * COLS * 2
-    
+
     """
         Game loop
     """ 
@@ -84,7 +84,8 @@ def run_bc_demo(ROWS, COLS):
             game_state.reset_game()  
             grid, start, goal = generate_valid_mp(ROWS, COLS)
             gr, gc = goal
-            bc_agent = BCAgent(start)
+            bc_runner = BCRunner(start, grid, goal, ROWS, COLS)
+            bc_agent = bc_runner.bc_agent
             game_state.restart = False
             
         #game in process
@@ -94,15 +95,13 @@ def run_bc_demo(ROWS, COLS):
                 
             now = pygame.time.get_ticks()   
             
-            #draw bc agent
-            observation = obs(bc_agent.pos, goal, grid, ROWS, COLS)
-            bc_action = bc_agent.action(observation, now)
-            bc_agent.move(bc_action, grid, ROWS, COLS)
-            bc_agent.steps += 1
+            bc_runner.step(now)
+                
             # print("obs:", observation)
             # print("action:", bc_action)
             # print("pos:", bc_agent.pos)
             
+            #draw bc agent
             br, bc = bc_agent.pos
             renderer.draw_bc_agent(br, bc)
             

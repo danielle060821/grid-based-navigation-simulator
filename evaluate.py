@@ -1,7 +1,7 @@
 from random_env_generator import generate_valid_mp
 from agents import AStarAgent, BCAgent
 from BC.features import obs
-
+from bc_runner import BCRunner
 def generate_eval_mps(ROWS, COLS, num_episodes = 100):
     eval_mps = []
     for _ in range(num_episodes):
@@ -35,13 +35,12 @@ def evaluate_BC(ROWS, COLS, eval_mps):
     timeout = 0
     tot_steps = 0
     for grid, start, goal in eval_mps:
-        bc_agent = BCAgent(start)
+        bc_runner = BCRunner(start, grid, goal, ROWS, COLS)
+        bc_agent = bc_runner.bc_agent
         bc_agent.BC_COOLDOWN_MS = 0
         steps = 0
         while bc_agent.pos != goal and steps < max_steps:
-            observation = obs(bc_agent.pos, goal, grid, ROWS, COLS)
-            action = bc_agent.action(observation, steps * 1000)
-            bc_agent.move(action, grid, ROWS, COLS)
+            bc_runner.step(steps*1000)
             steps += 1
         if bc_agent.pos == goal:
             success += 1

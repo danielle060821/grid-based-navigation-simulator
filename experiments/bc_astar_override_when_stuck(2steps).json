@@ -1,0 +1,17 @@
+{
+    "date": "2026-06-27",
+    "version": "bc_astar_override_when_stuck(2steps)",
+    "episodes": 100,
+
+    "astar": {
+        "success_rate": 1.0,
+        "avg_steps": 11.11
+    },
+
+    "bc": {
+        "success_rate": 0.89,
+        "avg_steps": 13.38
+    },
+
+    "notes": "Astar takes over BC when its oscillating."
+}
