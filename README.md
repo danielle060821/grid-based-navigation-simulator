@@ -5,7 +5,7 @@ A Python simulator with two modes: a real-time interactive game and an ML experi
 ## Demo
 ▶️ [🎮Game mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
 
-▶️ [🧪Experiment mode(Watch Demo on YouTube)](https://youtube.com/shorts/GmepEk-TK6I?si=xkMxB1479WmvY4Mr)
+▶️ [🧪Experiment mode(Watch Demo on YouTube)](https://youtube.com/shorts/kqObUgraAOg?si=0PpGFdVwAle4QEF6)
 
 ---
 
