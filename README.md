@@ -31,29 +31,37 @@ Watch a trained ML-based agent navigate randomized grid maps from start to goal.
 Evaluated across 100 randomized maps (20% wall density). The ML agent frequently oscillated near obstacles; adding a 2-step A* override when stuck improved success rate from 60% to 89%.
 
 ---
+## Requirements
+- Python 3.11+
 
-## Getting Started
+## Get Started
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/danielle060821/grid-based-navigation-simulator.git
+
+# Enter the project directory
 cd grid-based-navigation-simulator
 
-# Create virtual environment
+# Create a virtual environment
 python3 -m venv .venv
 
-# Activate (Mac/Linux)
+# Activate the virtual environment (macOS/Linux)
 source .venv/bin/activate
 
-# Install dependencies
-pip install pygame torch
+# Install project dependencies
+python3 -m pip install -r requirements.txt
 
-# Run game mode
-python game.py
+# Run the game
+python3 game.py
 
-# Run experiment mode
-python bc_demo.py
+# Run the Behavior Cloning demo
+python3 BC/bc_demo.py
 ```
+
+
+
+
 ## Project Structure
 ```
 My_Simulator/
