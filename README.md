@@ -1,6 +1,6 @@
 # Grid-Based Navigation Simulator
 
-A Python simulator with two modes: a real-time interactive game and an ML experiment pipeline comparing A* pathfinding against a learned agent.
+A Python simulator with two modes: a real-time interactive game and a machine learning experiment pipeline comparing A* pathfinding with a learned navigation policy (Behavior Cloning).
 
 ## Demo
 ▶️ [🎮Game mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
@@ -14,21 +14,21 @@ A Python simulator with two modes: a real-time interactive game and an ML experi
 ### 🎮 Game Mode (`game.py`)
 Control a player with WASD keys while an A* agent pursues you in real time. Maps are loaded from JSON config files — swap maps without touching any code.
 
-### 🧪 Experiment Mode (`bc_demo.py`)
-Watch a trained ML-based agent navigate randomized grid maps from start to goal. Visualizes success, failure, and A* override behavior side by side.
+### 🧪 Experiment Mode (`BC/bc_demo.py`)
+Watch a trained Behavior Cloning agent navigate randomized grid maps from start to goal. Visualizes successful runs, failure cases, and A* fallback behavior side by side.
 
 ---
 
 ## Experiment Results
+Evaluated on 500 randomly generated valid maps with 20% wall density. All methods were tested on the same map set for a fair comparison.
 
 | Method | Success Rate | Avg Steps | Timeouts |
 |--------|-------------|-----------|----------|
-| A* (Oracle) | 100% | 11.74 | 0 |
-| BC Baseline | 60% | 8.62 | 40 |
-| BC (No STAY) | 63% | 9.35 | 37 |
-| BC + A* Override | 89% | 13.38 | 11 |
+| A* (Expert) | 100% | 11.19 | 0 |
+| BC (without STAY action) | 66% | 10.80 | 172 |
+| BC + A* Fallback | 87% | 12.73 | 65 |
 
-Evaluated across 100 randomized maps (20% wall density). The ML agent frequently oscillated near obstacles; adding a 2-step A* override when stuck improved success rate from 60% to 89%.
+The learned policy sometimes oscillated near obstacles; adding a 2-step A* fallback when stuck improved success rate from 66% to 87%.
 
 ---
 ## Requirements
@@ -59,12 +59,9 @@ python3 game.py
 python3 BC/bc_demo.py
 ```
 
-
-
-
 ## Project Structure
 ```
-My_Simulator/
+grid-based-navigation-simulator/
 ├── game.py                  # Interactive game mode
 ├── a_Star.py                # A* pathfinding implementation
 ├── agents.py                # Agent class definitions
@@ -77,23 +74,25 @@ My_Simulator/
 ├── Maps/
 │   └── level1.json          # JSON map configs
 ├── BC/
-│   ├── bc_demo.py           # ML experiment entry point
+│   ├── bc_demo.py           # Behavior Cloning demo
 │   ├── bc_train.py          # Model training
 │   ├── collect_expert_data.py
 │   ├── features.py          # Observation space design
-│   ├── policy.py            # BC policy
+│   ├── policy.py            # Neural network policy
 │   ├── trajectory_recorder.py
-│   ├── hybrid_controller.py # A* override fallback
+│   ├── hybrid_controller.py # A* fallback controller
 │   └── dataset_expert.json  # Training data
 ├── experiments/
 │   ├── experiments.md       # Experiment log
 │   ├── pure_bc.json
 │   ├── bc_no_stay.json
 │   └── bc_astar_override.json
-└── assets/
-├── images/
-└── audio/
+├── assets/
+│   ├── audio/
+│   └── images/
+├── audio.py
+└── requirements.txt
 ```
 
 ## Tech Stack
-Python · PyTorch · Pygame
+Python · PyTorch · Pygame · Git

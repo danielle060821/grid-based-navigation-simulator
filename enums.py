@@ -16,3 +16,6 @@ class Move(IntEnum):
     RIGHT = 3 
     STAY = 4     
     
+class BCMode(Enum):
+    NO_STAY = auto()
+    ASTAR_FALLBACK = auto()
