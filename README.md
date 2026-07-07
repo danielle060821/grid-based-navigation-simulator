@@ -8,6 +8,16 @@ A Python simulator with two modes: a real-time interactive game and a machine le
 ▶️ [🧪Experiment mode(Watch Demo on YouTube)](https://youtube.com/shorts/kqObUgraAOg?si=0PpGFdVwAle4QEF6)
 
 ---
+## Motivation
+
+A* pathfinding finds the optimal path, but it requires complete map information — 
+it needs to "see" the entire grid before planning. Real-world navigation (robotics, 
+autonomous agents) often doesn't have this luxury: agents typically only perceive 
+their local surroundings.
+
+This project explores whether a learned policy, using only local observations, 
+can approximate the performance of a fully-informed A* planner  (used here as the expert to generate training data)— and what happens 
+when that learned policy fails.
 
 ## Modes
 
@@ -28,7 +38,11 @@ Evaluated on 500 randomly generated valid maps with 20% wall density. All method
 | BC (without STAY action) | 66% | 10.80 | 172 |
 | BC + A* Fallback | 87% | 12.73 | 65 |
 
-The learned policy sometimes oscillated near obstacles; adding a 2-step A* fallback when stuck improved success rate from 66% to 87%.
+The learned policy sometimes oscillated near obstacles; adding a 2-step A* fallback when stuck for 6 steps improved success rate from 66% to 87%.
+
+Note: A* has full map visibility, while the BC policy only observes local 
+surroundings — these numbers reflect a fundamentally different information 
+constraint, not just a weaker model.
 
 ---
 ## Requirements
