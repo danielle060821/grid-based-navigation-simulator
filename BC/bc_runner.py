@@ -12,6 +12,7 @@ class BCRunner:
         self.COLS = COLS
         self.last_move_time = 0
         self.mode = mode
+        self.fallback_steps = 0
     def step(self, now):
         if now - self.last_move_time < self.bc_agent.BC_COOLDOWN_MS:
             return
@@ -20,12 +21,13 @@ class BCRunner:
             #temporarily take over by astar if stuck
             if self.hybrid_controller.isOverriding():
                 self.bc_agent.pos = self.hybrid_controller.getToNextPos()
+                self.fallback_steps += 1
             else:
                 if self.hybrid_controller.isStuck(self.bc_agent.pos):
                     self.hybrid_controller.startOverride(self.bc_agent.pos, self.grid, self.goal)
                     if self.hybrid_controller.isOverriding():
                         self.bc_agent.pos = self.hybrid_controller.getToNextPos()
-            
+                        self.fallback_steps += 1
                 else:
                     observation = obs(self.bc_agent.pos, self.goal, self.grid, self.ROWS, self.COLS)
                     bc_action = self.bc_agent.action(observation, now)
