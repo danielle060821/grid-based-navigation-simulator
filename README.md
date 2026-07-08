@@ -1,50 +1,66 @@
 # Grid-Based Navigation Simulator
 
-A Python simulator with two modes: a real-time interactive game and a machine learning experiment pipeline comparing A* pathfinding with a learned navigation policy (Behavior Cloning).
+A Python-based navigation simulator featuring both a real-time interactive game and a hybrid navigation agent that combines learning (Behavior Cloning) and algorithmic planning (A*).
 
 ## Demo
-▶️ [🎮Game mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
+▶️ [🎮 Game Mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
 
-▶️ [🧪Experiment mode(Watch Demo on YouTube)](https://youtube.com/shorts/kqObUgraAOg?si=0PpGFdVwAle4QEF6)
+▶️ [🧪 Hybrid Navigation Mode(Watch Demo on YouTube)](https://youtube.com/shorts/kqObUgraAOg?si=0PpGFdVwAle4QEF6)
 
 ---
 ## Motivation
 
-A* pathfinding finds the optimal path, but it requires complete map information — 
-it needs to "see" the entire grid before planning. Real-world navigation (robotics, 
-autonomous agents) often doesn't have this luxury: agents typically only perceive 
-their local surroundings.
+A* pathfinding finds the optimal path, but it requires complete map information — it needs to “see” the entire grid before planning. In real-world robotics, however, maintaining an accurate global map is often difficult, while local observations are much easier to obtain.
 
-This project explores whether a learned policy, using only local observations, 
-can approximate the performance of a fully-informed A* planner  (used here as the expert to generate training data)— and what happens 
-when that learned policy fails.
+This project explores a hybrid navigation approach where a learned policy handles most navigation using only local observations, while A* is used only as a fallback when needed. The goal is not to replace A* completely, but to reduce how often the system depends on a global planner while still maintaining reliable navigation.
+
+## Hybrid Navigation Architecture
+
+```text
+              Local Observation
+                     │
+                     ▼
+        Learned Policy (Behavior Cloning)
+                     │
+             ┌───────┴────────┐
+             │                │
+         Normal         Stuck for 6 steps
+             │                │
+             ▼                ▼
+        Next Action      Expert Planner (A*)
+             │                │
+             └───────┬────────┘
+                     ▼
+              Continue Navigation
+```
+The learned policy handles routine navigation using only local observations, while the expert planner is invoked only when recovery is needed.
 
 ## Modes
 
 ### 🎮 Game Mode (`game.py`)
 Control a player with WASD keys while an A* agent pursues you in real time. Maps are loaded from JSON config files — swap maps without touching any code.
 
-### 🧪 Experiment Mode (`BC/bc_demo.py`)
-Watch a trained Behavior Cloning agent navigate randomized grid maps from start to goal. Visualizes successful runs, failure cases, and A* fallback behavior side by side.
+### 🧪 Hybrid Navigation Mode (`BC/bc_demo.py`)
+Watch the hybrid navigation agent navigate randomized grid maps. The learned policy performs most navigation, while A* is used only as a fallback when needed. The demo showcases successful runs, recovery cases, and failure cases.
 
 ---
 
 ## Experiment Results
-Evaluated on 500 randomly generated valid maps with 20% wall density. All methods were tested on the same map set for a fair comparison.
+Evaluated on 500 randomly generated valid maps with 20% wall density. All methods were tested on the same map set for a fair comparison. The hybrid agent achieved an 87% success rate while requiring expert intervention for only about 4% of navigation steps.
 
-| Method | Success Rate | Avg Steps | Timeouts |
-|--------|-------------|-----------|----------|
-| A* (Expert) | 100% | 11.19 | 0 |
-| BC (without STAY action) | 66% | 10.80 | 172 |
-| BC + A* Fallback | 87% | 12.73 | 65 |
+| Method | Success Rate | Avg Steps | Timeouts | Expert Steps |
+|--------|-------------:|----------:|----------:|-------------:|
+| A* (Expert) | 100% | 11.19 | 0 | 100% |
+| BC (without STAY) | 66% | 10.80 | 172 | 0% |
+| Hybrid Agent | **87%** | 12.73 | 65 | **4.1%** |
 
-The learned policy sometimes oscillated near obstacles; adding a 2-step A* fallback when stuck for 6 steps improved success rate from 66% to 87%.
+The learned policy sometimes oscillated near obstacles, causing navigation failures. To improve robustness, a 2-step A* fallback was triggered after the policy remained stuck for 6 consecutive steps. This increased the success rate from 66% to 87%.
 
-Note: A* has full map visibility, while the BC policy only observes local 
-surroundings — these numbers reflect a fundamentally different information 
-constraint, not just a weaker model.
+
+**Note:** A* has access to the full map throughout navigation, while the learned policy only receives local observations. The hybrid system calls the expert planner only when recovery is needed, allowing the learned policy to make the vast majority (96%) of navigation decisions independently.
 
 ---
+
 ## Requirements
 - Python 3.11+
 
@@ -69,7 +85,7 @@ python3 -m pip install -r requirements.txt
 # Run the game
 python3 game.py
 
-# Run the Behavior Cloning demo
+# Run the hybrid navigation demo
 python3 BC/bc_demo.py
 ```
 
@@ -88,7 +104,7 @@ grid-based-navigation-simulator/
 ├── Maps/
 │   └── level1.json          # JSON map configs
 ├── BC/
-│   ├── bc_demo.py           # Behavior Cloning demo
+│   ├── bc_demo.py           # Hybrid navigation demo
 │   ├── bc_train.py          # Model training
 │   ├── collect_expert_data.py
 │   ├── features.py          # Observation space design
