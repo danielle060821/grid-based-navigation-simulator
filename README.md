@@ -1,26 +1,28 @@
+
 # Grid-Based Navigation Simulator
 
-A Python-based navigation simulator featuring both a real-time interactive game and a hybrid navigation agent that combines learning (Behavior Cloning) and algorithmic planning (A*).
+A Python-based navigation simulator featuring both a real-time interactive game and a hybrid navigation agent that combines learning (Behavioral Cloning) and algorithmic planning (A*).
 
 ## Demo
 ▶️ [🎮 Game Mode(Watch Demo on YouTube)](https://youtube.com/shorts/hbPkSqb0V5U?si=l3zwWbpXMcCj4Su4)
 
 ▶️ [🧪 Hybrid Navigation Mode(Watch Demo on YouTube)](https://youtube.com/shorts/kqObUgraAOg?si=0PpGFdVwAle4QEF6)
 
----
 ## Motivation
 
 A* pathfinding finds the optimal path, but it requires complete map information — it needs to “see” the entire grid before planning. In real-world robotics, however, maintaining an accurate global map is often difficult, while local observations are much easier to obtain.
 
 This project explores a hybrid navigation approach where a learned policy handles most navigation using only local observations, while A* is used only as a fallback when needed. The goal is not to replace A* completely, but to reduce how often the system depends on a global planner while still maintaining reliable navigation.
 
+In practice, a policy trained purely by imitation tends to drift: small mistakes push it into situations it never saw during training, and those mistakes compound over time. This project uses A* as a safety net for exactly those moments, rather than relying on it for every decision.
+
 ## Hybrid Navigation Architecture
 
-```text
+```
               Local Observation
                      │
                      ▼
-        Learned Policy (Behavior Cloning)
+        Learned Policy (Behavioral Cloning)
                      │
              ┌───────┴────────┐
              │                │
@@ -33,36 +35,36 @@ This project explores a hybrid navigation approach where a learned policy handle
                      ▼
               Continue Navigation
 ```
+
 The learned policy handles routine navigation using only local observations, while the expert planner is invoked only when recovery is needed.
 
 ## Modes
 
 ### 🎮 Game Mode (`game.py`)
+
 Control a player with WASD keys while an A* agent pursues you in real time. Maps are loaded from JSON config files — swap maps without touching any code.
 
 ### 🧪 Hybrid Navigation Mode (`BC/bc_demo.py`)
+
 Watch the hybrid navigation agent navigate randomized grid maps. The learned policy performs most navigation, while A* is used only as a fallback when needed. The demo showcases successful runs, recovery cases, and failure cases.
 
----
-
 ## Experiment Results
+
 Evaluated on 500 randomly generated valid maps with 20% wall density. All methods were tested on the same map set for a fair comparison. The hybrid agent achieved an 87% success rate while requiring expert intervention for only about 4% of navigation steps.
 
-| Method | Success Rate | Avg Steps | Timeouts | Expert Steps |
-|--------|-------------:|----------:|----------:|-------------:|
-| A* (Expert) | 100% | 11.19 | 0 | 100% |
-| BC (without STAY) | 66% | 10.80 | 172 | 0% |
-| Hybrid Agent | **87%** | 12.73 | 65 | **4.1%** |
+|Method           |Success Rate|Avg Steps|Timeouts|Expert Steps|
+|-----------------|------------|---------|--------|------------|
+|A* (Expert)      |100%        |11.19    |0       |100%        |
+|BC (without STAY)|66%         |10.80    |172     |0%          |
+|Hybrid Agent     |87%         |12.73    |65      |4.1%        |
 
-The learned policy sometimes oscillated near obstacles, causing navigation failures. To improve robustness, a 2-step A* fallback was triggered after the policy remained stuck for 6 consecutive steps. This increased the success rate from 66% to 87%.
+The pure learned policy performed well most of the time, but small errors would occasionally push it into unfamiliar situations it hadn’t been trained to handle — and once slightly off track, it had no way to recover. This showed up as oscillation near obstacles, causing navigation failures. To improve robustness, a 2-step A* fallback was triggered after the policy remained stuck for 6 consecutive steps. This increased the success rate from 66% to 87%.
 
-
-**Note:** A* has access to the full map throughout navigation, while the learned policy only receives local observations. The hybrid system calls the expert planner only when recovery is needed, allowing the learned policy to make the vast majority (96%) of navigation decisions independently.
-
----
+Note: A* has access to the full map throughout navigation, while the learned policy only receives local observations. The hybrid system calls the expert planner only when recovery is needed, allowing the learned policy to make the vast majority (96%) of navigation decisions independently.
 
 ## Requirements
-- Python 3.11+
+
+Python 3.11+
 
 ## Get Started
 
@@ -90,6 +92,7 @@ python3 BC/bc_demo.py
 ```
 
 ## Project Structure
+
 ```
 grid-based-navigation-simulator/
 ├── game.py                  # Interactive game mode
@@ -125,4 +128,5 @@ grid-based-navigation-simulator/
 ```
 
 ## Tech Stack
+
 Python · PyTorch · Pygame · Git
